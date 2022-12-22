@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33205.214
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MongoFramework", "src\MongoFramework\MongoFramework.csproj", "{D871CD75-CC1E-4482-934F-42E74B2BF255}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D007577A-7BDB-4658-BCB6-7CA96908058F}"
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.build.props = src\Directory.build.props
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D871CD75-CC1E-4482-934F-42E74B2BF255}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D871CD75-CC1E-4482-934F-42E74B2BF255}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D871CD75-CC1E-4482-934F-42E74B2BF255}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D871CD75-CC1E-4482-934F-42E74B2BF255}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D871CD75-CC1E-4482-934F-42E74B2BF255} = {D007577A-7BDB-4658-BCB6-7CA96908058F}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A202BFC6-FE6A-4ED0-AD06-90C7BAB29E28}
+	EndGlobalSection
+EndGlobal
