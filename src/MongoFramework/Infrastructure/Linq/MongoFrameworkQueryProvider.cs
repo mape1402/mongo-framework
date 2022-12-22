@@ -20,7 +20,11 @@ namespace MongoFramework.Infrastructure.Linq
 		public IMongoDbConnection Connection { get; }
 		private IEntityDefinition EntityDefinition { get; }
 
-		private BsonDocument PreStage { get; }
+        private static readonly MethodInfo GenericCreateQueryMethod
+        = typeof(MongoFrameworkQueryProvider<TEntity>).GetRuntimeMethods()
+            .Single(m => (m.Name == "CreateQuery") && m.IsGenericMethod);
+
+        private BsonDocument PreStage { get; }
 
 		public EntityProcessorCollection<TEntity> EntityProcessors { get; } = new EntityProcessorCollection<TEntity>();
 
@@ -43,11 +47,11 @@ namespace MongoFramework.Infrastructure.Linq
 		}
 
 		public IQueryable CreateQuery(Expression expression)
-		{
-			return new MongoFrameworkQueryable<TEntity>(this, expression);
-		}
+        => (IQueryable)GenericCreateQueryMethod
+            .MakeGenericMethod(expression.Type.GetSequenceType())
+            .Invoke(this, new object[] { expression })!;
 
-		public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
+        public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
 		{
 			return new MongoFrameworkQueryable<TElement>(this, expression);
 		}
