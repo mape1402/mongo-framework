@@ -7,6 +7,7 @@
 		<Description>An "Entity Framework"-like interface for the MongoDB C# Driver</Description>
 		<PackageTags>$(PackageBaseTags)</PackageTags>
 		<Authors>James Turner</Authors>
+		<PackageId>MongoFramework.Fixed</PackageId>
 	</PropertyGroup>
 
 	<ItemGroup>

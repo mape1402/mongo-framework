@@ -68,8 +68,8 @@ jobs:
     needs: build
     if: github.event_name == 'release'
     environment:
-      name: 'GitHub Packages'
-      url: https://github.com/mape1402/packages
+      name: 'NuGet.org Packages'
+      url: https://www.nuget.org/packages
     runs-on: ubuntu-latest
     steps:
     - name: 'Download Artifact'
@@ -80,6 +80,6 @@ jobs:
       run: |
         Get-ChildItem . -Filter *.nupkg |
         Where-Object { !$_.Name.Contains('preview') } |
-        ForEach-Object { dotnet nuget push $_ --source https://nuget.pkg.github.com/mape1402/index.json --skip-duplicate --api-key ${{secrets.GITHUB_TOKEN}} }
+        ForEach-Object { dotnet nuget push $_ --source https://api.nuget.org/v3/index.json --skip-duplicate --api-key ${{secrets.NuGet_Key}} }
       shell: pwsh
     
