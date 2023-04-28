@@ -53,7 +53,7 @@ namespace MongoFramework.Linq
 			return queryable.Where(expression);
 		}
 
-		internal static IQueryable<TEntity> WhereFilter<TEntity>(this IQueryable<TEntity> queryable, Func<FilterDefinitionBuilder<TEntity>, FilterDefinition<TEntity>> queryFilter)
+		public static IQueryable<TEntity> WhereFilter<TEntity>(this IQueryable<TEntity> queryable, Func<FilterDefinitionBuilder<TEntity>, FilterDefinition<TEntity>> queryFilter)
 		{
 			var definition = queryFilter.Invoke(Builders<TEntity>.Filter);
 			return queryable.Where(e => definition.Inject());
