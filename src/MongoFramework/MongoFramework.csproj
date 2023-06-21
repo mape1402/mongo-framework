@@ -1,36 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
-		<AssemblyName>MongoFramework</AssemblyName>
-		<Title>MongoFramework</Title>
-		<Description>An "Entity Framework"-like interface for the MongoDB C# Driver</Description>
-		<PackageTags>$(PackageBaseTags)</PackageTags>
-		<Authors>James Turner</Authors>
-		<PackageId>MongoFramework.Fixed</PackageId>
+    <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+    <AssemblyName>MongoFramework</AssemblyName>
+    <Title>MongoFramework</Title>
+    <Description>An "Entity Framework"-like interface for the MongoDB C# Driver</Description>
+    <PackageTags>$(PackageBaseTags)</PackageTags>
+    <Authors>James Turner</Authors>
+    <PackageId>MongoFramework.Fixed</PackageId>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MinVer" Version="4.3.0">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="MongoDB.Driver" Version="2.18.0" />
+    <PackageReference Include="MinVer" Version="4.3.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+		<PackageReference Include="MongoDB.Driver" Version="2.19.2" />
 		<PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
 		<PackageReference Include="System.Linq.Async" Version="6.0.1" />
 	</ItemGroup>
 
-  <Target Name="Versioning" BeforeTargets="MinVer">
-    <PropertyGroup Label="Build">
-      <MinVerDefaultPreReleasePhase>preview</MinVerDefaultPreReleasePhase>
-      <!-- Tag your repository with the semantic version e.g. '1.0.0' to version all NuGet packages. If you have
-           multiple NuGet packages in your solution and want to version them separately, then uncomment this line
-           and tag your repository with the name of the package followed by the semantic version e.g.
-           'PackageName-1.0.0'. -->
-      <!--<MinVerTagPrefix>$(PackageId)-</MinVerTagPrefix>-->
-      <MinVerVerbosity>normal</MinVerVerbosity>
-    </PropertyGroup>
-  </Target>
 </Project>

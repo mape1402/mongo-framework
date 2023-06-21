@@ -1,30 +1,44 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using MongoFramework.Infrastructure.Internal;
 
 namespace MongoFramework.Infrastructure.Mapping
 {
 	public static class EntityDefinitionExtensions
 	{
-		public static IEntityProperty GetIdProperty(this IEntityDefinition definition)
+		/// <summary>
+		/// Finds the nearest <see cref="KeyDefinition"/> from <paramref name="definition"/>, recursively searching the base <see cref="EntityDefinition"/> if one exists.
+		/// </summary>
+		/// <param name="definition">The <see cref="EntityDefinition"/> to start the search from.</param>
+		/// <returns>The key definition; otherwise <see langword="null"/> if one can not be found.</returns>
+		public static KeyDefinition FindNearestKey(this EntityDefinition definition)
 		{
-			return definition.GetAllProperties().FirstOrDefault(m => m.IsKey);
+			if (definition.Key is null)
+			{
+				return EntityMapping.GetOrCreateDefinition(definition.EntityType.BaseType).FindNearestKey();
+			}
+
+			return definition.Key;
 		}
 
-		public static string GetIdName(this IEntityDefinition definition)
+		public static PropertyDefinition GetIdProperty(this EntityDefinition definition)
+		{
+			return definition.FindNearestKey()?.Property;
+		}
+
+		public static string GetIdName(this EntityDefinition definition)
 		{
 			return definition.GetIdProperty()?.ElementName;
 		}
 
-		public static object GetIdValue(this IEntityDefinition definition, object entity)
+		public static object GetIdValue(this EntityDefinition definition, object entity)
 		{
 			return definition.GetIdProperty()?.GetValue(entity);
 		}
 
-		public static object GetDefaultId(this IEntityDefinition definition)
+		public static object GetDefaultId(this EntityDefinition definition)
 		{
-			var idPropertyType = definition.GetIdProperty()?.PropertyType;
+			var idPropertyType = definition.GetIdProperty()?.PropertyInfo.PropertyType;
 			if (idPropertyType is { IsValueType: true })
 			{
 				return Activator.CreateInstance(idPropertyType);
@@ -32,7 +46,7 @@ namespace MongoFramework.Infrastructure.Mapping
 			return null;
 		}
 
-		public static IEnumerable<IEntityProperty> GetInheritedProperties(this IEntityDefinition definition)
+		public static IEnumerable<PropertyDefinition> GetInheritedProperties(this EntityDefinition definition)
 		{
 			var currentType = definition.EntityType.BaseType;
 			while (currentType != typeof(object) && currentType != null)
@@ -47,7 +61,7 @@ namespace MongoFramework.Infrastructure.Mapping
 			}
 		}
 
-		public static IEnumerable<IEntityProperty> GetAllProperties(this IEntityDefinition definition)
+		public static IEnumerable<PropertyDefinition> GetAllProperties(this EntityDefinition definition)
 		{
 			foreach (var property in definition.Properties)
 			{
@@ -60,7 +74,7 @@ namespace MongoFramework.Infrastructure.Mapping
 			}
 		}
 
-		public static IEntityProperty GetProperty(this IEntityDefinition definition, string name)
+		public static PropertyDefinition GetProperty(this EntityDefinition definition, string name)
 		{
 			foreach (var property in definition.GetAllProperties())
 			{
@@ -71,58 +85,6 @@ namespace MongoFramework.Infrastructure.Mapping
 			}
 
 			return default;
-		}
-
-		private sealed class TraversalState
-		{
-			public HashSet<Type> SeenTypes { get; set; }
-			public IEnumerable<IEntityProperty> Properties { get; set; }
-		}
-
-		public static IEnumerable<IEntityProperty> TraverseProperties(this IEntityDefinition definition)
-		{
-			var stack = new Stack<TraversalState>();
-			stack.Push(new TraversalState
-			{
-				SeenTypes = new HashSet<Type> { definition.EntityType },
-				Properties = definition.GetAllProperties()
-			});
-
-			while (stack.Count > 0)
-			{
-				var state = stack.Pop();
-				foreach (var property in state.Properties)
-				{
-					yield return property;
-
-					var propertyType = property.PropertyType;
-					propertyType = propertyType.GetEnumerableItemTypeOrDefault();
-
-					if (EntityMapping.IsValidTypeToMap(propertyType) && !state.SeenTypes.Contains(propertyType))
-					{
-						var nestedProperties = EntityMapping.GetOrCreateDefinition(propertyType)
-							.GetAllProperties()
-							.Select(p => new EntityProperty
-							{
-								EntityType = p.EntityType,
-								IsKey = p.IsKey,
-								ElementName = p.ElementName,
-								FullPath = $"{property.FullPath}.{p.ElementName}",
-								PropertyType = p.PropertyType,
-								PropertyInfo = p.PropertyInfo
-							});
-
-						stack.Push(new TraversalState
-						{
-							SeenTypes = new HashSet<Type>(state.SeenTypes)
-							{
-								propertyType
-							},
-							Properties = nestedProperties
-						});
-					}
-				}
-			}
 		}
 	}
 }

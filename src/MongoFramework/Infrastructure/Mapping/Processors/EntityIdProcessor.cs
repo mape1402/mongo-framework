@@ -2,56 +2,50 @@
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
-using MongoDB.Bson.Serialization.IdGenerators;
 
-namespace MongoFramework.Infrastructure.Mapping.Processors
+namespace MongoFramework.Infrastructure.Mapping.Processors;
+
+public class EntityIdProcessor : IMappingProcessor
 {
-	public class EntityIdProcessor : IMappingProcessor
+	public void ApplyMapping(EntityDefinitionBuilder definitionBuilder)
 	{
-		public void ApplyMapping(IEntityDefinition definition, BsonClassMap classMap)
+		foreach (var propertyBuilder in definitionBuilder.Properties)
 		{
-			IEntityProperty idProperty = default;
-			foreach (var property in definition.Properties)
+			if (Attribute.IsDefined(propertyBuilder.PropertyInfo, typeof(KeyAttribute)))
 			{
-				if (property.PropertyInfo.GetCustomAttribute<KeyAttribute>() != null)
-				{
-					idProperty = property;
-					break;
-				}
-
-				if (property.ElementName.Equals("id", StringComparison.InvariantCultureIgnoreCase))
-				{
-					//We don't break here just in case another property has the KeyAttribute
-					//We preference the attribute over the name match
-					idProperty = property;
-				}
+				definitionBuilder.HasKey(
+					propertyBuilder.PropertyInfo,
+					AutoPickKeyGenerator
+				);
+				return;
 			}
 
-			if (idProperty is EntityProperty entityProperty)
+			if (propertyBuilder.ElementName.Equals("id", StringComparison.InvariantCultureIgnoreCase))
 			{
-				classMap.MapIdMember(idProperty.PropertyInfo);
-				entityProperty.IsKey = true;
-
-				//Set an Id Generator based on the member type
-				var idMemberMap = classMap.IdMemberMap;
-				var memberType = BsonClassMap.GetMemberInfoType(idMemberMap.MemberInfo);
-				if (memberType == typeof(string))
-				{
-					idMemberMap.SetIdGenerator(StringObjectIdGenerator.Instance);
-					definition.KeyGenerator = new EntityKeyGenerator(StringObjectIdGenerator.Instance);
-				}
-				else if (memberType == typeof(Guid))
-				{
-					idMemberMap.SetIdGenerator(CombGuidGenerator.Instance);
-					definition.KeyGenerator = new EntityKeyGenerator(CombGuidGenerator.Instance);
-				}
-				else if (memberType == typeof(ObjectId))
-				{
-					idMemberMap.SetIdGenerator(ObjectIdGenerator.Instance);
-					definition.KeyGenerator = new EntityKeyGenerator(ObjectIdGenerator.Instance);
-				}
+				//We don't stop here just in case another property has the KeyAttribute
+				//We preference the attribute over the name match
+				definitionBuilder.HasKey(
+					propertyBuilder.PropertyInfo,
+					AutoPickKeyGenerator
+				);
 			}
+		}
+	}
+
+	private static void AutoPickKeyGenerator(EntityKeyBuilder keyBuilder)
+	{
+		var propertyType = keyBuilder.Property.PropertyType;
+		if (propertyType == typeof(string))
+		{
+			keyBuilder.HasKeyGenerator(EntityKeyGenerators.StringKeyGenerator);
+		}
+		else if (propertyType == typeof(Guid))
+		{
+			keyBuilder.HasKeyGenerator(EntityKeyGenerators.GuidKeyGenerator);
+		}
+		else if (propertyType == typeof(ObjectId))
+		{
+			keyBuilder.HasKeyGenerator(EntityKeyGenerators.ObjectIdKeyGenerator);
 		}
 	}
 }

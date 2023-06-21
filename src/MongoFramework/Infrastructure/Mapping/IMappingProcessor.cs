@@ -1,9 +1,6 @@
-﻿using MongoDB.Bson.Serialization;
+﻿namespace MongoFramework.Infrastructure.Mapping;
 
-namespace MongoFramework.Infrastructure.Mapping
+public interface IMappingProcessor
 {
-	public interface IMappingProcessor
-	{
-		void ApplyMapping(IEntityDefinition definition, BsonClassMap classMap);
-	}
+	void ApplyMapping(EntityDefinitionBuilder definitionBuilder);
 }

@@ -18,7 +18,7 @@ namespace MongoFramework.Infrastructure.Linq
 	public class MongoFrameworkQueryProvider<TEntity> : IMongoFrameworkQueryProvider<TEntity> where TEntity : class
 	{
 		public IMongoDbConnection Connection { get; }
-		private IEntityDefinition EntityDefinition { get; }
+		private EntityDefinition EntityDefinition { get; }
 
         private static readonly MethodInfo GenericCreateQueryMethod
         = typeof(MongoFrameworkQueryProvider<TEntity>).GetRuntimeMethods()
@@ -47,9 +47,9 @@ namespace MongoFramework.Infrastructure.Linq
 		}
 
 		public IQueryable CreateQuery(Expression expression)
-        => (IQueryable)GenericCreateQueryMethod
-            .MakeGenericMethod(expression.Type.GetSequenceType())
-            .Invoke(this, new object[] { expression })!;
+			=> (IQueryable)GenericCreateQueryMethod
+				.MakeGenericMethod(expression.Type.GetSequenceType())
+				.Invoke(this, new object[] { expression })!;
 
         public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
 		{
