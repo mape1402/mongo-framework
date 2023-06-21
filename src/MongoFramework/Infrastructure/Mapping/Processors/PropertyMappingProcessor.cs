@@ -1,18 +1,14 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
-using MongoDB.Bson.Serialization;
 
 namespace MongoFramework.Infrastructure.Mapping.Processors
 {
 	public class PropertyMappingProcessor : IMappingProcessor
 	{
-		public void ApplyMapping(IEntityDefinition definition, BsonClassMap classMap)
+		public void ApplyMapping(EntityDefinitionBuilder definitionBuilder)
 		{
-			var entityType = definition.EntityType;
+			var entityType = definitionBuilder.EntityType;
 			var properties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-
-			var definitionProperties = new List<IEntityProperty>();
 
 			foreach (var property in properties)
 			{
@@ -41,28 +37,20 @@ namespace MongoFramework.Infrastructure.Mapping.Processors
 					continue;
 				}
 
-				//Do the mapping
-				var memberMap = classMap.MapMember(property);
-
-				//Set custom element name with the "ColumnAttribute"
-				var columnAttribute = property.GetCustomAttribute<ColumnAttribute>();
-				if (columnAttribute != null)
+				definitionBuilder.HasProperty(property, builder =>
 				{
-					var mappedName = columnAttribute.Name;
-					memberMap.SetElementName(mappedName);
-				}
+					var elementName = property.Name;
 
-				definitionProperties.Add(new EntityProperty
-				{
-					EntityType = definition.EntityType,
-					ElementName = memberMap.ElementName,
-					FullPath = memberMap.ElementName,
-					PropertyType = property.PropertyType,
-					PropertyInfo = property
+					//Set custom element name with the "ColumnAttribute"
+					var columnAttribute = property.GetCustomAttribute<ColumnAttribute>();
+					if (columnAttribute != null)
+					{
+						elementName = columnAttribute.Name;
+					}
+
+					builder.HasElementName(elementName);
 				});
 			}
-
-			definition.Properties = definitionProperties;
 		}
 	}
 }
