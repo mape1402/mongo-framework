@@ -200,7 +200,7 @@ namespace MongoFramework
 		{
 			if (disposing)
 			{
-				Connection?.Dispose();
+				//Connection?.Dispose();
 			}
 		}
 
