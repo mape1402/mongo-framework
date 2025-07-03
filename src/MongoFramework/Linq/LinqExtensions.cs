@@ -108,7 +108,7 @@ namespace MongoFramework.Linq
 			};
 
 			var originalProvider = dbSet.Provider as IMongoFrameworkQueryProvider<TEntity>;
-			var provider = new MongoFrameworkQueryProvider<TEntity>(originalProvider, stage);
+			var provider = new MongoFrameworkQueryProvider<TEntity>(originalProvider, [stage]);
 			return new MongoFrameworkQueryable<TEntity>(provider);
 		}
 	}

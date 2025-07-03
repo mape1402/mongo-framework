@@ -20,24 +20,24 @@ namespace MongoFramework.Infrastructure.Linq
 		public IMongoDbConnection Connection { get; }
 		private EntityDefinition EntityDefinition { get; }
 
-        private static readonly MethodInfo GenericCreateQueryMethod
-        = typeof(MongoFrameworkQueryProvider<TEntity>).GetRuntimeMethods()
-            .Single(m => (m.Name == "CreateQuery") && m.IsGenericMethod);
+		private static readonly MethodInfo GenericCreateQueryMethod
+		= typeof(MongoFrameworkQueryProvider<TEntity>).GetRuntimeMethods()
+			.Single(m => (m.Name == "CreateQuery") && m.IsGenericMethod);
 
-        private BsonDocument PreStage { get; }
+		private BsonDocument[] PreStages { get; } = Array.Empty<BsonDocument>();
 
 		public EntityProcessorCollection<TEntity> EntityProcessors { get; } = new EntityProcessorCollection<TEntity>();
 
 		public MongoFrameworkQueryProvider(IMongoDbConnection connection) : this(connection, null) { }
-		public MongoFrameworkQueryProvider(IMongoDbConnection connection, BsonDocument preStage)
+		public MongoFrameworkQueryProvider(IMongoFrameworkQueryProvider<TEntity> provider, BsonDocument[] preStages) : this(provider.Connection, preStages)
+		{
+			EntityProcessors.AddRange(provider.EntityProcessors);
+		}
+		public MongoFrameworkQueryProvider(IMongoDbConnection connection, BsonDocument[] preStages)
 		{
 			Connection = connection;
 			EntityDefinition = EntityMapping.GetOrCreateDefinition(typeof(TEntity));
-			PreStage = preStage;
-		}
-		public MongoFrameworkQueryProvider(IMongoFrameworkQueryProvider<TEntity> provider, BsonDocument preStage) : this(provider.Connection, preStage)
-		{
-			EntityProcessors.AddRange(provider.EntityProcessors);
+			PreStages = preStages ?? Array.Empty<BsonDocument>();
 		}
 
 		public Expression GetBaseExpression()
@@ -51,7 +51,7 @@ namespace MongoFramework.Infrastructure.Linq
 				.MakeGenericMethod(expression.Type.GetSequenceType())
 				.Invoke(this, new object[] { expression })!;
 
-        public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
+		public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
 		{
 			return new MongoFrameworkQueryable<TElement>(this, expression);
 		}
@@ -143,10 +143,7 @@ namespace MongoFramework.Infrastructure.Linq
 			var serializer = modelType.GetProperty(nameof(AggregateQueryableExecutionModel<object>.OutputSerializer))
 					.GetValue(underlyingExecutionModel) as IBsonSerializer;
 
-			if (PreStage != null)
-			{
-				expressionStages = new[] { PreStage }.Concat(expressionStages);
-			}
+			expressionStages = PreStages.Concat(expressionStages);
 
 			var result = new AggregateExecutionModel
 			{
