@@ -15,10 +15,15 @@ namespace MongoFramework.Infrastructure.Linq
 		private static MethodInfo GetMethodInfo<TResult>(Func<IQueryable<object>, TResult> methodDelegate) => methodDelegate.Method.GetGenericMethodDefinition();
 		private static MethodInfo GetMethodInfo_WithParameter<TParam>(Func<IQueryable<object>, TParam, object> methodDelegate) => methodDelegate.Method.GetGenericMethodDefinition();
 		private static MethodInfo GetMethodInfo_Passthrough_NonGeneric<TSource>(Func<IQueryable<TSource>, TSource> methodDelegate) => methodDelegate.Method;
+		private static MethodInfo GetMethodInfo_Passthrough_NonGeneric<TSource>(Func<IEnumerable<TSource>, TSource> methodDelegate) => methodDelegate.Method;
+		private static MethodInfo GetMethodInfo_Passthrough_NonGeneric<TSource>(Func<IAsyncEnumerable<TSource>, CancellationToken, ValueTask<TSource>> methodDelegate) => methodDelegate.Method;
 		private static MethodInfo GetMethodInfo_WithParameter<TParam, TResult>(Func<IQueryable<object>, TParam, TResult> methodDelegate) => methodDelegate.Method.GetGenericMethodDefinition();
 
 		public static class Queryable
 		{
+			public static readonly MethodInfo Where_2 = GetMethodInfo_WithParameter<Expression<Func<object, bool>>>(System.Linq.Queryable.Where);
+			public static readonly MethodInfo Select_2 = GetMethodInfo_WithParameter<Expression<Func<object, object>>>(System.Linq.Queryable.Select);
+
 			public static readonly MethodInfo First_1 = GetMethodInfo(System.Linq.Queryable.First);
 			public static readonly MethodInfo First_2 = GetMethodInfo_WithParameter<Expression<Func<object, bool>>>(System.Linq.Queryable.First);
 			public static readonly MethodInfo FirstOrDefault_1 = GetMethodInfo(System.Linq.Queryable.FirstOrDefault);
@@ -74,18 +79,48 @@ namespace MongoFramework.Infrastructure.Linq
 			public static readonly MethodInfo Single_1 = GetMethodInfo(System.Linq.Enumerable.Single);
 			public static readonly MethodInfo SingleOrDefault_1 = GetMethodInfo(System.Linq.Enumerable.SingleOrDefault);
 
+			public static readonly MethodInfo Count_1 = GetMethodInfo(System.Linq.Enumerable.Count);
 			public static readonly MethodInfo Any_1 = GetMethodInfo(System.Linq.Enumerable.Any);
+
+			public static readonly MethodInfo Max_1 = GetMethodInfo(System.Linq.Enumerable.Max);
+			public static readonly MethodInfo Min_1 = GetMethodInfo(System.Linq.Enumerable.Min);
+
+			public static readonly MethodInfo Sum_Int32_1 = GetMethodInfo_Passthrough_NonGeneric<int>(System.Linq.Enumerable.Sum);
+			public static readonly MethodInfo Sum_NullableInt32_1 = GetMethodInfo_Passthrough_NonGeneric<int?>(EnumerableHelpers.Sum);
+			public static readonly MethodInfo Sum_Decimal_1 = GetMethodInfo_Passthrough_NonGeneric<decimal>(System.Linq.Enumerable.Sum);
+			public static readonly MethodInfo Sum_NullableDecimal_1 = GetMethodInfo_Passthrough_NonGeneric<decimal?>(EnumerableHelpers.Sum);
+			public static readonly MethodInfo Sum_Double_1 = GetMethodInfo_Passthrough_NonGeneric<double>(System.Linq.Enumerable.Sum);
+			public static readonly MethodInfo Sum_NullableDouble_1 = GetMethodInfo_Passthrough_NonGeneric<double?>(EnumerableHelpers.Sum);
+			public static readonly MethodInfo Sum_Long_1 = GetMethodInfo_Passthrough_NonGeneric<long>(System.Linq.Enumerable.Sum);
+			public static readonly MethodInfo Sum_NullableLong_1 = GetMethodInfo_Passthrough_NonGeneric<long?>(EnumerableHelpers.Sum);
+			public static readonly MethodInfo Sum_Float_1 = GetMethodInfo_Passthrough_NonGeneric<float>(System.Linq.Enumerable.Sum);
+			public static readonly MethodInfo Sum_NullableFloat_1 = GetMethodInfo_Passthrough_NonGeneric<float?>(EnumerableHelpers.Sum);
 		}
 
 		public static class AsyncEnumerable
 		{
-			public static readonly MethodInfo First_1 = GetMethodInfo(System.Linq.AsyncEnumerable.FirstAsync);
-			public static readonly MethodInfo FirstOrDefault_1 = GetMethodInfo(System.Linq.AsyncEnumerable.FirstOrDefaultAsync);
+			public static readonly MethodInfo First_1 = GetMethodInfo(AsyncEnumerableHelpers.FirstAsync);
+			public static readonly MethodInfo FirstOrDefault_1 = GetMethodInfo(AsyncEnumerableHelpers.FirstOrDefaultAsync);
 
-			public static readonly MethodInfo Single_1 = GetMethodInfo(System.Linq.AsyncEnumerable.SingleAsync);
-			public static readonly MethodInfo SingleOrDefault_1 = GetMethodInfo(System.Linq.AsyncEnumerable.SingleOrDefaultAsync);
+			public static readonly MethodInfo Single_1 = GetMethodInfo(AsyncEnumerableHelpers.SingleAsync);
+			public static readonly MethodInfo SingleOrDefault_1 = GetMethodInfo(AsyncEnumerableHelpers.SingleOrDefaultAsync);
 
-			public static readonly MethodInfo Any_1 = GetMethodInfo(System.Linq.AsyncEnumerable.AnyAsync);
+			public static readonly MethodInfo Count_1 = GetMethodInfo(AsyncEnumerableHelpers.CountAsync);
+			public static readonly MethodInfo Any_1 = GetMethodInfo(AsyncEnumerableHelpers.AnyAsync);
+
+			public static readonly MethodInfo Max_1 = GetMethodInfo(AsyncEnumerableHelpers.MaxAsync);
+			public static readonly MethodInfo Min_1 = GetMethodInfo(AsyncEnumerableHelpers.MinAsync);
+
+			public static readonly MethodInfo Sum_Int32_1 = GetMethodInfo_Passthrough_NonGeneric<int>(AsyncEnumerableHelpers.SumAsync);
+			public static readonly MethodInfo Sum_NullableInt32_1 = GetMethodInfo_Passthrough_NonGeneric<int?>(AsyncEnumerableHelpers.SumAsync);
+			public static readonly MethodInfo Sum_Decimal_1 = GetMethodInfo_Passthrough_NonGeneric<decimal>(AsyncEnumerableHelpers.SumAsync);
+			public static readonly MethodInfo Sum_NullableDecimal_1 = GetMethodInfo_Passthrough_NonGeneric<decimal?>(AsyncEnumerableHelpers.SumAsync);
+			public static readonly MethodInfo Sum_Double_1 = GetMethodInfo_Passthrough_NonGeneric<double>(AsyncEnumerableHelpers.SumAsync);
+			public static readonly MethodInfo Sum_NullableDouble_1 = GetMethodInfo_Passthrough_NonGeneric<double?>(AsyncEnumerableHelpers.SumAsync);
+			public static readonly MethodInfo Sum_Long_1 = GetMethodInfo_Passthrough_NonGeneric<long>(AsyncEnumerableHelpers.SumAsync);
+			public static readonly MethodInfo Sum_NullableLong_1 = GetMethodInfo_Passthrough_NonGeneric<long?>(AsyncEnumerableHelpers.SumAsync);
+			public static readonly MethodInfo Sum_Float_1 = GetMethodInfo_Passthrough_NonGeneric<float>(AsyncEnumerableHelpers.SumAsync);
+			public static readonly MethodInfo Sum_NullableFloat_1 = GetMethodInfo_Passthrough_NonGeneric<float?>(AsyncEnumerableHelpers.SumAsync);
 		}
 	}
 }

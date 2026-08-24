@@ -26,7 +26,6 @@ namespace MongoFramework
 				{
 					var settings = MongoClientSettings.FromUrl(Url);
 					ConfigureSettings?.Invoke(settings);
-					settings.LinqProvider = MongoDB.Driver.Linq.LinqProvider.V2;
 					InternalClient = new MongoClient(settings);
 				}
 

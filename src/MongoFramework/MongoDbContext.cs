@@ -200,7 +200,7 @@ namespace MongoFramework
 		{
 			if (disposing)
 			{
-				//Connection?.Dispose();
+				// The context does not own shared connections supplied by callers.
 			}
 		}
 

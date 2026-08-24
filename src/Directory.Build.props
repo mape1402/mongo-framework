@@ -9,7 +9,9 @@
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageIcon>icon.png</PackageIcon>
-		<PackageProjectUrl>https://github.com/TurnerSoftware/MongoFramework</PackageProjectUrl>
+		<PackageProjectUrl>https://github.com/mape1402/mongo-framework</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/mape1402/mongo-framework</RepositoryUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageBaseTags>mongo;mongodb;data;database;orm</PackageBaseTags>
 
 		<!-- SourceLink Support -->
@@ -25,6 +27,7 @@
 
 	<ItemGroup>
 		<None Include="..\..\images\$(PackageIcon)" Pack="true" PackagePath="/" />
+		<None Include="..\..\README.md" Pack="true" PackagePath="/" />
 	</ItemGroup>
 
 </Project>
