@@ -75,14 +75,15 @@ namespace MongoFramework.Linq
 		public static IQueryable<TEntity> SearchGeoNear<TEntity, TCoordinates>(this IMongoDbSet<TEntity> dbSet, Expression<Func<TEntity, object>> targetField, GeoJsonPoint<TCoordinates> point, Expression<Func<TEntity, object>> distanceResultField = null, double? maxDistance = null, double? minDistance = null) where TEntity : class where TCoordinates : GeoJsonCoordinates
 		{
 			var entitySerializer = BsonSerializer.LookupSerializer<TEntity>();
+			var renderArgs = new RenderArgs<TEntity>(entitySerializer, BsonSerializer.SerializerRegistry, new PathRenderArgs(null, false), false, false, false, null);
 			var keyExpressionField = new ExpressionFieldDefinition<TEntity>(targetField);
-			var keyStringField = keyExpressionField.Render(entitySerializer, BsonSerializer.SerializerRegistry);
+			var keyStringField = keyExpressionField.Render(renderArgs);
 
 			var distanceFieldName = "Distance";
 			if (distanceResultField != null)
 			{
 				var distanceResultExpressionField = new ExpressionFieldDefinition<TEntity>(distanceResultField);
-				var distanceResultStringField = distanceResultExpressionField.Render(entitySerializer, BsonSerializer.SerializerRegistry);
+				var distanceResultStringField = distanceResultExpressionField.Render(renderArgs);
 				distanceFieldName = distanceResultStringField.FieldName;
 			}
 

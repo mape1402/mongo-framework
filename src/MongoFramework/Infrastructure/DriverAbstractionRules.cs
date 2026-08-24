@@ -16,6 +16,8 @@ internal static class DriverAbstractionRules
 	{
 		RegisterSerializer<decimal>(new DecimalSerializer(BsonType.Decimal128));
 		RegisterSerializer<decimal?>(new NullableSerializer<decimal>(new DecimalSerializer(BsonType.Decimal128)));
+		RegisterSerializer<Guid>(new GuidSerializer(GuidRepresentation.Standard));
+		RegisterSerializer<Guid?>(new NullableSerializer<Guid>(new GuidSerializer(GuidRepresentation.Standard)));
 
 		BsonSerializer.RegisterSerializationProvider(TypeDiscoverySerializationProvider.Instance);
 	}

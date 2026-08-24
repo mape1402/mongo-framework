@@ -20,11 +20,10 @@ namespace MongoFramework.Infrastructure.Linq
 		public IMongoDbConnection Connection { get; }
 		private EntityDefinition EntityDefinition { get; }
 
-        private static readonly MethodInfo GenericCreateQueryMethod
-        = typeof(MongoFrameworkQueryProvider<TEntity>).GetRuntimeMethods()
-            .Single(m => (m.Name == "CreateQuery") && m.IsGenericMethod);
+		private static readonly MethodInfo GenericCreateQueryMethod = typeof(MongoFrameworkQueryProvider<TEntity>).GetRuntimeMethods()
+			.Single(m => m.Name == nameof(CreateQuery) && m.IsGenericMethod);
 
-        private BsonDocument PreStage { get; }
+		private BsonDocument PreStage { get; }
 
 		public EntityProcessorCollection<TEntity> EntityProcessors { get; } = new EntityProcessorCollection<TEntity>();
 
@@ -43,15 +42,15 @@ namespace MongoFramework.Infrastructure.Linq
 		public Expression GetBaseExpression()
 		{
 			var collection = GetCollection();
-			return Expression.Constant(collection.AsQueryable(), typeof(IMongoQueryable<TEntity>));
+			return Expression.Constant(collection.AsQueryable(), typeof(IQueryable<TEntity>));
 		}
 
 		public IQueryable CreateQuery(Expression expression)
 			=> (IQueryable)GenericCreateQueryMethod
 				.MakeGenericMethod(expression.Type.GetSequenceType())
-				.Invoke(this, new object[] { expression })!;
+				.Invoke(this, new object[] { expression });
 
-        public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
+		public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
 		{
 			return new MongoFrameworkQueryable<TElement>(this, expression);
 		}
@@ -123,25 +122,36 @@ namespace MongoFramework.Infrastructure.Linq
 
 		private AggregateExecutionModel GetExecutionModel(Expression expression, bool isAsync = false)
 		{
-			//Use the official driver to do the heavy lifting on the query translation
-			var underlyingProvider = GetCollection().AsQueryable().Provider;
-			var providerType = underlyingProvider.GetType(); //Type: MongoQueryProviderImpl (internal)
-			var translatedQuery = providerType.GetMethod("Translate", BindingFlags.NonPublic | BindingFlags.Instance)
-				.Invoke(underlyingProvider, new[] { expression }); //Type: QueryableTranslation (internal)
-			var translatedQueryType = translatedQuery.GetType();
+			// Use the official driver to do the heavy lifting on the query translation.
+			var rootQueryable = GetCollection().AsQueryable();
+			var underlyingProvider = rootQueryable.Provider;
+			var providerType = underlyingProvider.GetType(); // Type: MongoQueryProvider<TDocument> (internal)
+			var translationOptions = providerType.GetMethod("GetTranslationOptions", BindingFlags.Public | BindingFlags.Instance)
+				.Invoke(underlyingProvider, null);
 
-			//We can't cast to AggregateQueryableExecutionModel<T> directly as we don't have generic parameter T
-			//While it may be TEntity, it could also be something else
-			var underlyingExecutionModel = translatedQueryType.GetProperty("Model").GetValue(translatedQuery) as QueryableExecutionModel;
-			var modelType = underlyingExecutionModel.GetType(); //Assumed type: AggregateQueryableExecutionModel<T>
+			var hasResultTransformer = HasResultTransformer(expression);
+			var pipelineExpression = hasResultTransformer ? GetPipelineExpression(expression) : expression;
+			pipelineExpression = new UnderlyingQueryableReplacer(rootQueryable.Expression).Visit(pipelineExpression);
+			var outputType = pipelineExpression.Type.GetSequenceType();
 
-			//Retrieve the stages from reflection
-			var expressionStages = modelType.GetProperty(nameof(AggregateQueryableExecutionModel<object>.Stages))
-					.GetValue(underlyingExecutionModel) as IEnumerable<BsonDocument>;
+			var translatorType = typeof(IMongoCollection<>).Assembly.GetType(
+				"MongoDB.Driver.Linq.Linq3Implementation.Translators.ExpressionToExecutableQueryTranslators.ExpressionToExecutableQueryTranslator",
+				throwOnError: true);
+			var translateMethod = translatorType.GetMethods(BindingFlags.Public | BindingFlags.Static)
+				.Single(m => m.Name == "Translate"
+					&& m.IsGenericMethodDefinition
+					&& m.GetGenericArguments().Length == 2);
+			var executableQuery = translateMethod
+				.MakeGenericMethod(typeof(TEntity), outputType)
+				.Invoke(null, new[] { underlyingProvider, pipelineExpression, translationOptions });
 
-			//Retreve the serializer from reflection
-			var serializer = modelType.GetProperty(nameof(AggregateQueryableExecutionModel<object>.OutputSerializer))
-					.GetValue(underlyingExecutionModel) as IBsonSerializer;
+			var pipeline = executableQuery.GetType().GetProperty("Pipeline").GetValue(executableQuery);
+			var pipelineType = pipeline.GetType();
+
+			var serializer = pipelineType.GetProperty("OutputSerializer").GetValue(pipeline) as IBsonSerializer;
+			var ast = pipelineType.GetProperty("Ast").GetValue(pipeline);
+			var renderedPipeline = ast.GetType().GetMethod("Render").Invoke(ast, null) as BsonValue;
+			var expressionStages = renderedPipeline.AsBsonArray.Cast<BsonDocument>();
 
 			if (PreStage != null)
 			{
@@ -154,17 +164,79 @@ namespace MongoFramework.Infrastructure.Linq
 				Serializer = serializer
 			};
 
-			//Get the result transforming lambda (allows things like FirstOrDefault, Count, Average etc to work properly)
-			var resultTransformer = translatedQueryType.GetProperty("ResultTransformer").GetValue(translatedQuery); //Type: Mixed (implements IResultTransformer (internal))
-			if (resultTransformer != null)
+			// Get the result transforming lambda (allows things like FirstOrDefault, Count, Average etc to work properly).
+			if (hasResultTransformer)
 			{
 				result.ResultTransformer = ResultTransformers.Transform(expression, serializer.ValueType, isAsync) as LambdaExpression;
 
-				//Note: In the future this can change from the initial reflection to a `TryTransform` function where it checks the expression itself
-				//		The reason we are doing this method first is to weed out the bugs and any core missing functionality.
+				// Note: In the future this can change from the initial reflection to a `TryTransform` function where it checks the expression itself.
+				//       The reason we are doing this method first is to weed out the bugs and any core missing functionality.
 			}
 
 			return result;
+		}
+
+		private static Expression GetPipelineExpression(Expression expression)
+		{
+			if (expression is not MethodCallExpression methodCallExpression)
+			{
+				return expression;
+			}
+
+			if (methodCallExpression.Arguments.Count == 2)
+			{
+				var sourceExpression = methodCallExpression.Arguments[0];
+				var sourceType = sourceExpression.Type.GetSequenceType();
+				var argumentExpression = methodCallExpression.Arguments[1];
+
+				return methodCallExpression.Method.Name switch
+				{
+					nameof(Queryable.First) or
+					nameof(Queryable.FirstOrDefault) or
+					nameof(Queryable.Single) or
+					nameof(Queryable.SingleOrDefault) or
+					nameof(Queryable.Count) or
+					nameof(Queryable.Any) => Expression.Call(
+						null,
+						MethodInfoCache.Queryable.Where_2.MakeGenericMethod(sourceType),
+						sourceExpression,
+						argumentExpression),
+
+					nameof(Queryable.Max) or
+					nameof(Queryable.Min) or
+					nameof(Queryable.Sum) => Expression.Call(
+						null,
+						MethodInfoCache.Queryable.Select_2.MakeGenericMethod(sourceType, expression.Type),
+						sourceExpression,
+						argumentExpression),
+
+					_ => sourceExpression
+				};
+			}
+
+			return methodCallExpression.Arguments.Count > 0 ? methodCallExpression.Arguments[0] : expression;
+		}
+
+		private static bool HasResultTransformer(Expression expression)
+		{
+			if (expression is not MethodCallExpression methodCallExpression)
+			{
+				return false;
+			}
+
+			return methodCallExpression.Method.Name switch
+			{
+				nameof(Queryable.First) or
+				nameof(Queryable.FirstOrDefault) or
+				nameof(Queryable.Single) or
+				nameof(Queryable.SingleOrDefault) or
+				nameof(Queryable.Count) or
+				nameof(Queryable.Max) or
+				nameof(Queryable.Min) or
+				nameof(Queryable.Sum) or
+				nameof(Queryable.Any) => true,
+				_ => false
+			};
 		}
 
 		private IEnumerable<TResult> ExecuteModel<TResult>(AggregateExecutionModel model)
@@ -257,6 +329,26 @@ namespace MongoFramework.Infrastructure.Linq
 		{
 			var model = GetExecutionModel(expression);
 			return QueryHelper.GetQuery<TEntity>(model);
+		}
+
+		private class UnderlyingQueryableReplacer : System.Linq.Expressions.ExpressionVisitor
+		{
+			private readonly Expression Replacement;
+
+			public UnderlyingQueryableReplacer(Expression replacement)
+			{
+				Replacement = replacement;
+			}
+
+			protected override Expression VisitConstant(ConstantExpression node)
+			{
+				if (node.Value is IQueryable queryable && queryable.Provider is MongoDB.Driver.Linq.IMongoQueryProvider)
+				{
+					return Replacement;
+				}
+
+				return base.VisitConstant(node);
+			}
 		}
 	}
 }

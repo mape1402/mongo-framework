@@ -24,21 +24,25 @@ namespace MongoFramework.Linq
 
 		public static async Task<TOutput[]> ToArrayAsync<TOutput>(this IQueryable<TOutput> source, CancellationToken cancellationToken = default)
 		{
-			return await source.AsAsyncEnumerable(cancellationToken).ToArrayAsync(cancellationToken);
+			return (await source.ToListAsync(cancellationToken)).ToArray();
 		}
 
 		public static async Task<List<TOutput>> ToListAsync<TOutput>(this IQueryable<TOutput> source, CancellationToken cancellationToken = default)
 		{
-			return await source.AsAsyncEnumerable(cancellationToken).ToListAsync(cancellationToken);
+			var results = new List<TOutput>();
+			await foreach (var item in source.AsAsyncEnumerable(cancellationToken).WithCancellation(cancellationToken))
+			{
+				results.Add(item);
+			}
+
+			return results;
 		}
 
 		private static async Task<TResult> ExecuteExpressionAsync<TResult, TSource>(IQueryable<TSource> source, Expression expression, CancellationToken cancellationToken)
 		{
 			if (source.Provider is IMongoFrameworkQueryProvider provider)
 			{
-				var finalisedQueryable = provider.CreateQuery<TResult>(expression);
-				var asyncProvider = finalisedQueryable.Provider as IMongoFrameworkQueryProvider;
-				var resultTask = (ValueTask<TResult>)asyncProvider.ExecuteAsync(finalisedQueryable.Expression, cancellationToken);
+				var resultTask = (ValueTask<TResult>)provider.ExecuteAsync(expression, cancellationToken);
 				return await resultTask;
 			}
 
