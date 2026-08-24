@@ -4,11 +4,11 @@
 # MongoFramework
 An "Entity Framework"-like interface for MongoDB
 
-![Build](https://img.shields.io/github/actions/workflow/status/TurnerSoftware/mongoframework/build.yml?branch=main)
-[![Codecov](https://img.shields.io/codecov/c/github/turnersoftware/mongoframework/main.svg)](https://codecov.io/gh/TurnerSoftware/MongoFramework)
-[![NuGet](https://img.shields.io/nuget/v/MongoFramework.svg)](https://www.nuget.org/packages/MongoFramework/)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/62fa31c90bf94f3d8e201b9684a7a4ca)](https://www.codacy.com/app/Turnerj/MongoFramework)
+![Build](https://img.shields.io/github/actions/workflow/status/mape1402/mongo-framework/build.yml?branch=main)
+[![NuGet](https://img.shields.io/nuget/v/MongoFramework.Fixed.svg)](https://www.nuget.org/packages/MongoFramework.Fixed/)
 </div>
+
+> This fork is published as `MongoFramework.Fixed` and targets .NET 8, .NET 9, and .NET 10 with MongoDB.Driver 3.11.0.
 
 ## Overview
 MongoFramework tries to bring some of the nice features from Entity Framework into the world of MongoDB.
@@ -29,16 +29,12 @@ MongoFramework is currently built on-top of the official MongoDB C# driver.
 
 MongoFramework is licensed under the MIT license. It is free to use in personal and commercial projects.
 
-There are [support plans](https://turnersoftware.com.au/support-plans) available that cover all active [Turner Software OSS projects](https://github.com/TurnerSoftware).
-Support plans provide private email support, expert usage advice for our projects, priority bug fixes and more.
-These support plans help fund our OSS commitments to provide better software for everyone.
-
 ## MongoFramework Extensions
 These extensions are official packages that enhance the functionality of MongoFramework, integrating it with other systems and tools.
 
 ### MongoFramework.Profiling.MiniProfiler
-[![NuGet](https://img.shields.io/nuget/v/MongoFramework.Profiling.MiniProfiler.svg)](https://www.nuget.org/packages/MongoFramework.Profiling.MiniProfiler/)
-[![NuGet](https://img.shields.io/nuget/dt/MongoFramework.Profiling.MiniProfiler.svg)](https://www.nuget.org/packages/MongoFramework.Profiling.MiniProfiler/)
+[![NuGet](https://img.shields.io/nuget/v/MongoFramework.Fixed.Profiling.MiniProfiler.svg)](https://www.nuget.org/packages/MongoFramework.Fixed.Profiling.MiniProfiler/)
+[![NuGet](https://img.shields.io/nuget/dt/MongoFramework.Fixed.Profiling.MiniProfiler.svg)](https://www.nuget.org/packages/MongoFramework.Fixed.Profiling.MiniProfiler/)
 
 Supports profiling database reads and writes, pushing the data into [MiniProfiler](https://github.com/MiniProfiler/dotnet/).
 
