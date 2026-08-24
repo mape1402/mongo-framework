@@ -23,13 +23,13 @@ This fork publishes the main package as `MongoFramework.Fixed`.
 1. Add a section to `CHANGELOG.md` for the release tag:
 
    ```markdown
-   ## [v1.0.3]
+   ## [v2.0.0]
    ```
 
 2. Create or update `.release` with exactly one non-empty line:
 
    ```text
-   v1.0.3
+   v2.0.0
    ```
 
 3. Commit and push the changelog and `.release` changes to `main`.
@@ -48,7 +48,7 @@ The workflow then creates `releases/vX.Y.Z`, creates or updates the tag, creates
 Manual production releases must run from a branch named `releases/vX.Y.Z`, for example:
 
    ```powershell
-   git switch releases/v1.0.3
+   git switch releases/v2.0.0
    ```
 
 Then run the `Build and Release` workflow with `workflow_dispatch`.

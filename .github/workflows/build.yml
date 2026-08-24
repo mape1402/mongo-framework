@@ -130,7 +130,7 @@ jobs:
 
           NON_EMPTY_LINES="$(grep -cve '^[[:space:]]*$' "$RELEASE_MARKER_PATH" || true)"
           if [[ "$NON_EMPTY_LINES" != "1" ]]; then
-            echo "$RELEASE_MARKER_PATH must contain exactly one non-empty line with the release tag, for example v1.0.3."
+            echo "$RELEASE_MARKER_PATH must contain exactly one non-empty line with the release tag, for example v2.0.0."
             exit 1
           fi
 
